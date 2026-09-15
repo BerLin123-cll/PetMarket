@@ -1,0 +1,59 @@
+# ============================================================
+# PetMarket 萌宠商城 - 生产环境配置（profile: prod）
+#
+# 启用方式：
+#   java -jar petmarket.jar --spring.profiles.active=prod
+#   或设置环境变量 SPRING_PROFILES_ACTIVE=prod
+#
+# 生产环境要求（启动前必须提供）：
+#   DB_URL / DB_USERNAME / DB_PASSWORD / JWT_SECRET
+# 未提供 JWT_SECRET 时应用会启动失败并给出明确提示（见 StartupConfigValidator）。
+# ============================================================
+
+server:
+  port: ${SERVER_PORT:8081}
+  # 生产环境隐藏错误细节，避免泄露堆栈与内部路径
+  error:
+    include-message: never
+    include-stacktrace: never
+    include-binding-errors: never
+  tomcat:
+    max-swallow-size: 10MB
+
+spring:
+  # 生产环境禁用 Thymeleaf/静态资源缓存调试等开发特性
+  devtools:
+    restart:
+      enabled: false
+  datasource:
+    hikari:
+      # 连接池参数可在部署时按机器规格调整
+      maximum-pool-size: ${DB_POOL_MAX_SIZE:20}
+      minimum-idle: ${DB_POOL_MIN_IDLE:5}
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  servlet:
+    multipart:
+      max-file-size: ${UPLOAD_MAX_FILE_SIZE:5MB}
+      max-request-size: ${UPLOAD_MAX_REQUEST_SIZE:10MB}
+
+# ---------- 彻底关闭 SQL 明细日志 ----------
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
+
+logging:
+  level:
+    root: warn
+    com.pet.petmarket: info
+    # 屏蔽 mapper 层 debug（防止 SQL 与参数被打到日志）
+    com.pet.petmarket.mapper: warn
+    org.springframework: warn
+  file:
+    name: ${LOG_FILE:./logs/petmarket.log}
+  logback:
+    rollingpolicy:
+      max-file-size: 20MB
+      max-history: 30
+      total-size-cap: 1GB

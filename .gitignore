@@ -1,0 +1,82 @@
+# ============================================
+# PetMarket 萌宠商城 - Git 忽略规则
+# ============================================
+
+# ---------- Java / Maven ----------
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+hs_err_pid*
+replay_pid*
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# ---------- 前端 / Node ----------
+node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/.vite/
+frontend/stats.html
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+.pnpm-store/
+node_modules/.cache/
+
+# ---------- IDE / 编辑器 ----------
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+!.vscode/extensions.json
+*.swp
+*.swo
+*~
+
+# ---------- 本地配置文件 / 密钥（禁止提交）----------
+.env
+.env.local
+.env.*.local
+*-local.yml
+*-local.properties
+src/main/resources/application-local.yml
+src/main/resources/application-local.properties
+*.pem
+*.key
+*.p12
+*.jks
+secrets/
+
+# ---------- 本地上传的图片/文件（运行时生成，不入库）----------
+/data/
+/upload/
+/uploads/
+src/main/resources/static/uploads/
+
+# ---------- 日志与临时文件 ----------
+logs/
+*.log
+*.tmp
+*.bak
+*.orig
+*.rej
+*.pid
+
+# ---------- 操作系统 ----------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+desktop.ini

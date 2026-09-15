@@ -1,0 +1,50 @@
+# ============================================================
+# 测试环境配置（仅在 src/test 下生效，不参与打包）
+#
+# 目的：
+#   1. 让测试不依赖本机 MySQL —— 使用 H2 内存库（MySQL 兼容模式）；
+#   2. 每个测试类使用独立库名，避免共享状态（见各测试类的 @SpringBootTest properties）；
+#   3. 关闭定时任务与 SQL 明细日志，保证测试输出干净、结果稳定。
+# ============================================================
+server:
+  port: 0
+
+spring:
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:petmarket_test;MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password: ""
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:sql/h2/schema-h2.sql
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+
+jwt:
+  secret: petmarket-test-secret-key-must-be-at-least-32-bytes-long-for-hs256
+  expiration: 86400000
+  header: Authorization
+  prefix: Bearer
+
+petmarket:
+  order:
+    pay-timeout-minutes: 30
+    release-scan-interval-ms: 60000
+    # 测试中关闭定时任务，改为手动调用 service 方法验证逻辑
+    auto-release-enabled: false
+  upload:
+    dir: ./target/test-upload
+    url-prefix: /uploads
+    max-size: 5242880
+
+logging:
+  level:
+    root: warn
+    com.pet.petmarket: warn

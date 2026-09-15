@@ -1,0 +1,101 @@
+# ============================================================
+# PetMarket 萌宠商城 - 主配置（开发环境默认值）
+#
+# 发布/生产环境请勿直接修改本文件中的敏感信息，
+# 推荐通过「环境变量」或启动参数覆盖（见 application-prod.yml 与 .env.example）：
+#   DB_URL / DB_USERNAME / DB_PASSWORD / JWT_SECRET / UPLOAD_DIR ...
+#
+# 启动示例（Windows PowerShell）：
+#   $env:JWT_SECRET="你的生产密钥"; .\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=prod"
+# ============================================================
+server:
+  port: ${SERVER_PORT:8081}
+
+spring:
+  application:
+    name: PetMarket
+
+  # ---------- 数据库：全部改为环境变量占位符，密码不落库到代码仓库 ----------
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${DB_URL:jdbc:mysql://localhost:3306/pet_market?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:123456}
+
+  # ---------- 文件上传大小限制（与 petmarket.upload.max-size 保持一致）----------
+  servlet:
+    multipart:
+      max-file-size: ${UPLOAD_MAX_FILE_SIZE:5MB}
+      max-request-size: ${UPLOAD_MAX_REQUEST_SIZE:10MB}
+
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+
+# ============================================================
+# MyBatis-Plus 配置
+# ============================================================
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+
+# ============================================================
+# JWT 配置
+#   secret：敏感信息，生产环境必须通过环境变量 JWT_SECRET 提供，
+#           且长度至少 32 字节（HS256 要求），否则启动直接失败。
+# ============================================================
+jwt:
+  secret: ${JWT_SECRET:petmarket-dev-only-secret-key-please-override-in-production-2024}
+  expiration: ${JWT_EXPIRATION:86400000} # 24小时（毫秒）
+  header: Authorization
+  prefix: Bearer
+
+# ============================================================
+# 订单配置
+#   pay-timeout-minutes：待支付订单超时自动取消并回补库存的分钟数
+# ============================================================
+petmarket:
+  order:
+    pay-timeout-minutes: ${ORDER_PAY_TIMEOUT_MINUTES:30}
+    # 超时扫描任务执行间隔（毫秒），默认 60 秒
+    release-scan-interval-ms: ${ORDER_RELEASE_SCAN_INTERVAL_MS:60000}
+  upload:
+    # 本地上传根目录（图片只保存在本机，暂不做服务器/OSS 上传）
+    dir: ${UPLOAD_DIR:./data/upload}
+    url-prefix: ${UPLOAD_URL_PREFIX:/uploads}
+    max-size: ${UPLOAD_MAX_SIZE:5242880}
+    product-sub-dir: product
+    check-magic-number: true
+
+# ============================================================
+# 日志配置
+#   注意：SQL 明细日志（StdOutImpl / mapper: debug）只在开发环境开启，
+#        生产环境请使用 prod profile（application-prod.yml 已彻底关闭）。
+# ============================================================
+logging:
+  level:
+    root: info
+    com.pet.petmarket: debug
+
+---
+# ============================================================
+# 开发环境：开启 SQL 明细日志，便于排查
+#
+# 日志实现说明（重要）：
+#   这里使用 Slf4jImpl 而不是 StdOutImpl。StdOutImpl 直接往 System.out 打
+#   且不带字符编码，会把 utf8mb4 的 TEXT 列（如商品 description）显示成
+#   <<BLOB>>，控制台中文日志也容易乱码；Slf4jImpl 走 logback 的 UTF-8
+#   编码器，SQL、参数、结果都能正常显示。
+# ============================================================
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+
+logging:
+  level:
+    com.pet.petmarket.mapper: debug
