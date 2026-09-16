@@ -125,6 +125,24 @@ CREATE TABLE `upload_file` (
     PRIMARY KEY (`id`)
 );
 
+DROP TABLE IF EXISTS `pet`;
+CREATE TABLE `pet` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT,
+    `user_id` BIGINT NOT NULL,
+    `name` VARCHAR(50) NOT NULL,
+    `species` TINYINT NOT NULL,
+    `breed` VARCHAR(50),
+    `gender` TINYINT DEFAULT 0,
+    `birthday` DATE,
+    `weight` DECIMAL(5,2),
+    `allergy_history` VARCHAR(500),
+    `avatar` VARCHAR(255),
+    `last_deworm_date` DATE,
+    `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`)
+);
+
 -- ---------- 测试基础数据 ----------
 INSERT INTO `admin` (`username`, `password`, `nickname`) VALUES
 ('admin', '$2a$10$9HXI8Qf36pc4jWQpTTugU.pdllKFpmP7N38aHQ4wHfQ4wygxAKWr2', '超级管理员');

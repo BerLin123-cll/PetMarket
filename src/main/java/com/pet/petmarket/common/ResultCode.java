@@ -30,7 +30,9 @@ public enum ResultCode {
     ORDER_NOT_FOUND(4001, "订单不存在"),
     ORDER_STATUS_ERROR(4002, "订单状态异常"),
 
-    ADDRESS_NOT_FOUND(5001, "地址不存在");
+    ADDRESS_NOT_FOUND(5001, "地址不存在"),
+
+    PET_NOT_FOUND(6001, "宠物不存在");
 
     private final Integer code;
     private final String message;

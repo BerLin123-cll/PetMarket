@@ -23,6 +23,7 @@ const routes = [
           { path: '', redirect: '/user/profile' },
           { path: 'profile', name: 'UserProfile', component: () => import('@/views/front/user/Profile.vue') },
           { path: 'address', name: 'UserAddress', component: () => import('@/views/front/user/Address.vue') },
+          { path: 'pets', name: 'UserPets', component: () => import('@/views/front/user/Pets.vue') },
           { path: 'orders', name: 'UserOrders', component: () => import('@/views/front/user/Orders.vue') }
         ]
       }

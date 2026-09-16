@@ -31,6 +31,7 @@
               <template #dropdown>
                 <el-dropdown-menu>
                   <el-dropdown-item command="profile">个人中心</el-dropdown-item>
+                  <el-dropdown-item command="pets">我的宠物</el-dropdown-item>
                   <el-dropdown-item command="orders">我的订单</el-dropdown-item>
                   <el-dropdown-item command="logout" divided>退出登录</el-dropdown-item>
                 </el-dropdown-menu>
@@ -75,6 +76,7 @@ const fetchCartCount = async () => {
 
 const handleCommand = (cmd) => {
   if (cmd === 'profile') router.push('/user/profile')
+  else if (cmd === 'pets') router.push('/user/pets')
   else if (cmd === 'orders') router.push('/user/orders')
   else if (cmd === 'logout') {
     userStore.logout()

@@ -16,6 +16,11 @@
         <span>订单号：{{ order.orderNo }}</span>
         <span>{{ order.createTime }}</span>
         <el-tag :type="statusType(order.orderStatus)">{{ statusText(order.orderStatus) }}</el-tag>
+        <span v-if="order.orderStatus === 0" class="pay-countdown" :class="{ expired: payRemaining(order) <= 0 }">
+          <el-icon><Clock /></el-icon>
+          <template v-if="payRemaining(order) > 0">剩余 {{ formatCountdown(payRemaining(order)) }} 自动取消</template>
+          <template v-else>已超时，即将自动取消</template>
+        </span>
       </div>
       <el-table :data="order.items" size="small" border>
         <el-table-column label="商品" min-width="250">
@@ -38,7 +43,13 @@
         <span>收货人：{{ order.receiverName }} {{ order.receiverPhone }}</span>
         <div>
           <span class="order-total">合计：¥{{ order.totalAmount }}</span>
-          <el-button v-if="order.orderStatus === 0" type="danger" size="small" @click="handlePay(order)">去支付</el-button>
+          <el-button
+            v-if="order.orderStatus === 0"
+            type="danger"
+            size="small"
+            :disabled="payRemaining(order) <= 0"
+            @click="handlePay(order)"
+          >去支付</el-button>
           <el-button v-if="order.orderStatus === 0" size="small" @click="handleCancel(order.id)">取消订单</el-button>
         </div>
       </div>
@@ -62,11 +73,16 @@
 import { ref, onMounted } from 'vue'
 import { getOrderList, cancelOrder, payOrder } from '@/api/order'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useNow, remainingSeconds, formatCountdown } from '@/composables/useCountdown'
 
 const orders = ref([])
 const pageNum = ref(1)
 const total = ref(0)
 const activeTab = ref('')
+
+// 用统一时钟驱动所有待支付订单的倒计时（每秒刷新，避免每行各开一个定时器）
+const now = useNow()
+const payRemaining = (order) => remainingSeconds(order.payExpireTime, now.value)
 
 const statusText = (s) => ['待支付', '已支付', '已发货', '已完成', '已取消'][s] || '未知'
 const statusType = (s) => ['warning', 'primary', '', 'success', 'info'][s] || ''
@@ -113,4 +129,13 @@ onMounted(fetchData)
   color: #f56c6c;
   margin-right: 12px;
 }
+.pay-countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  font-size: 13px;
+  color: #e6a23c;
+}
+.pay-countdown.expired { color: #f56c6c; }
 </style>

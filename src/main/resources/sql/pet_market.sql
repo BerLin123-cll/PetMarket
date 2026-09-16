@@ -171,6 +171,30 @@ CREATE TABLE `upload_file` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='上传文件记录表';
 
 -- ============================================
+-- 10. 宠物档案表 pet
+--    （P2 新增：用户登记自己的宠物，用于个性化推荐与驱虫提醒）
+--    species 物种编码：1-狗 2-猫 3-小宠 4-爬宠 5-鸟 6-鱼
+-- ============================================
+DROP TABLE IF EXISTS `pet`;
+CREATE TABLE `pet` (
+    `id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '宠物ID',
+    `user_id` BIGINT(20) NOT NULL COMMENT '主人用户ID',
+    `name` VARCHAR(50) NOT NULL COMMENT '宠物昵称',
+    `species` TINYINT(2) NOT NULL COMMENT '物种：1-狗，2-猫，3-小宠，4-爬宠，5-鸟，6-鱼',
+    `breed` VARCHAR(50) DEFAULT NULL COMMENT '品种',
+    `gender` TINYINT(1) DEFAULT 0 COMMENT '性别：0-未知，1-公，2-母',
+    `birthday` DATE DEFAULT NULL COMMENT '生日',
+    `weight` DECIMAL(5,2) DEFAULT NULL COMMENT '体重(kg)',
+    `allergy_history` VARCHAR(500) DEFAULT NULL COMMENT '过敏史（逗号/顿号分隔的关键词，如：鸡肉,牛肉）',
+    `avatar` VARCHAR(255) DEFAULT NULL COMMENT '宠物头像URL',
+    `last_deworm_date` DATE DEFAULT NULL COMMENT '上次驱虫日期',
+    `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_user` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='宠物档案表';
+
+-- ============================================
 -- 老库升级脚本（已上线过的库执行这一段即可，全新建库可跳过）
 -- ============================================
 -- ALTER TABLE `orders` ADD COLUMN `pay_expire_time` DATETIME DEFAULT NULL COMMENT '支付截止时间' AFTER `pay_time`;

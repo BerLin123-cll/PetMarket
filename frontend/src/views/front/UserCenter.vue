@@ -10,6 +10,9 @@
             <el-menu-item index="/user/address">
               <el-icon><Location /></el-icon>收货地址
             </el-menu-item>
+            <el-menu-item index="/user/pets">
+              <el-icon><Star /></el-icon>我的宠物
+            </el-menu-item>
             <el-menu-item index="/user/orders">
               <el-icon><Document /></el-icon>我的订单
             </el-menu-item>

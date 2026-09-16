@@ -2,6 +2,9 @@ package com.pet.petmarket.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.pet.petmarket.entity.Orders;
+import com.pet.petmarket.vo.HotProductVO;
+import com.pet.petmarket.vo.OrderStatusCountVO;
+import com.pet.petmarket.vo.SalesTrendVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -71,4 +74,48 @@ public interface OrdersMapper extends BaseMapper<Orders> {
      */
     @Select("SELECT COALESCE(SUM(total_amount), 0) FROM orders WHERE pay_status = 1")
     BigDecimal sumPaidAmount();
+
+    /**
+     * 销售趋势：按天统计已支付订单的销售额
+     *
+     * <p>用 {@code CAST(pay_time AS DATE)} 取日期，MySQL 与 H2（MySQL 兼容模式）均支持；
+     * 缺失的日期由服务层补 0。</p>
+     *
+     * @param fromTime 统计起始时间（含）
+     */
+    @Select("SELECT CAST(pay_time AS DATE) AS sale_date, SUM(total_amount) AS amount FROM orders " +
+            "WHERE pay_status = 1 AND pay_time >= #{fromTime} " +
+            "GROUP BY CAST(pay_time AS DATE) ORDER BY sale_date")
+    List<SalesTrendVO> selectSalesTrend(@Param("fromTime") LocalDateTime fromTime);
+
+    /**
+     * 订单状态分布：按 order_status 分组统计订单数量
+     */
+    @Select("SELECT order_status AS status, COUNT(*) AS `count` FROM orders GROUP BY order_status")
+    List<OrderStatusCountVO> countGroupByStatus();
+
+    /**
+     * 热销商品：从已支付订单的订单项中按销量聚合，取前 N
+     *
+     * @param limit 返回条数
+     */
+    @Select("SELECT oi.product_id AS product_id, oi.product_name AS product_name, " +
+            "SUM(oi.quantity) AS quantity, SUM(oi.price * oi.quantity) AS amount " +
+            "FROM order_item oi JOIN orders o ON oi.order_id = o.id " +
+            "WHERE o.pay_status = 1 GROUP BY oi.product_id, oi.product_name " +
+            "ORDER BY quantity DESC LIMIT #{limit}")
+    List<HotProductVO> selectHotProducts(@Param("limit") int limit);
+
+    /**
+     * 有过已支付订单的用户数（去重）
+     */
+    @Select("SELECT COUNT(DISTINCT user_id) FROM orders WHERE pay_status = 1")
+    Long countPaidBuyers();
+
+    /**
+     * 下单 ≥2 笔（已支付）的用户数，用于计算复购率
+     */
+    @Select("SELECT COUNT(*) FROM (SELECT user_id FROM orders WHERE pay_status = 1 " +
+            "GROUP BY user_id HAVING COUNT(*) >= 2) t")
+    Long countRepeatBuyers();
 }

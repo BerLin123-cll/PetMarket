@@ -89,7 +89,8 @@ const handleSubmit = async () => {
   try {
     const res = await createOrder({ addressId: selectedAddressId.value, cartIds: cartIds.value })
     ElMessage.success('订单创建成功')
-    router.push({ path: '/order/result', query: { orderNo: res.data.orderNo } })
+    // 把后端返回的支付截止时间一并带到支付页，用于展示支付倒计时
+    router.push({ path: '/order/result', query: { orderNo: res.data.orderNo, payExpireTime: res.data.payExpireTime } })
   } catch (e) {} finally {
     submitting.value = false
   }

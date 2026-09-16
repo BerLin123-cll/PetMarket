@@ -6,6 +6,16 @@ export const adminLogin = (data) => request.post('/admin/auth/login', data)
 // 数据统计
 export const getDashboardStats = () => request.get('/admin/dashboard/stats')
 
+// 数据概览 - 经营洞察（图表）
+export const getSalesTrend = (days = 7) =>
+  request.get('/admin/dashboard/sales-trend', { params: { days } })
+export const getOrderStatusFunnel = () => request.get('/admin/dashboard/order-status')
+export const getHotProducts = (limit = 5) =>
+  request.get('/admin/dashboard/hot-products', { params: { limit } })
+export const getLowStockProducts = (params) =>
+  request.get('/admin/dashboard/low-stock', { params })
+export const getRepurchaseRate = () => request.get('/admin/dashboard/repurchase-rate')
+
 // 图片上传（本地电脑保存，返回 { url, name, size }）
 export const uploadImage = (file, bizType = 'product') => {
   const formData = new FormData()
