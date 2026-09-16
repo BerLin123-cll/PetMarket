@@ -3,7 +3,9 @@ package com.pet.petmarket.controller.admin;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.pet.petmarket.common.BusinessException;
 import com.pet.petmarket.common.Result;
+import com.pet.petmarket.common.ResultCode;
 import com.pet.petmarket.entity.User;
 import com.pet.petmarket.service.UserService;
 import lombok.Data;
@@ -58,7 +60,7 @@ public class AdminUserController {
     public Result<Void> toggleUserStatus(@PathVariable Long userId, @RequestBody ToggleStatusRequest req) {
         User user = userService.getById(userId);
         if (user == null) {
-            throw new RuntimeException("用户不存在");
+            throw new BusinessException(ResultCode.USER_NOT_FOUND);
         }
         user.setStatus(req.getStatus());
         userService.updateById(user);

@@ -34,8 +34,9 @@ public class CartController {
      * 更新购物车商品数量
      */
     @PutMapping("/update/{id}")
-    public Result<Void> updateCartQuantity(@PathVariable Long id, @RequestBody UpdateQuantityRequest req) {
-        cartService.updateCartQuantity(id, req.getQuantity());
+    public Result<Void> updateCartQuantity(HttpServletRequest request, @PathVariable Long id, @RequestBody UpdateQuantityRequest req) {
+        Long userId = (Long) request.getAttribute("userId");
+        cartService.updateCartQuantity(userId, id, req.getQuantity());
         return Result.success();
     }
     
@@ -43,8 +44,9 @@ public class CartController {
      * 删除购物车项
      */
     @DeleteMapping("/remove/{id}")
-    public Result<Void> removeFromCart(@PathVariable Long id) {
-        cartService.removeFromCart(id);
+    public Result<Void> removeFromCart(HttpServletRequest request, @PathVariable Long id) {
+        Long userId = (Long) request.getAttribute("userId");
+        cartService.removeFromCart(userId, id);
         return Result.success();
     }
     

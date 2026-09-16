@@ -3,6 +3,7 @@ package com.pet.petmarket.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.pet.petmarket.common.BusinessException;
 import com.pet.petmarket.common.ResultCode;
 import com.pet.petmarket.entity.Address;
 import com.pet.petmarket.mapper.AddressMapper;
@@ -37,12 +38,12 @@ public class AddressServiceImpl extends ServiceImpl<AddressMapper, Address> impl
     @Override
     public void updateAddress(Long userId, Address address) {
         if (address.getId() == null) {
-            throw new RuntimeException("地址ID不能为空");
+            throw new BusinessException(ResultCode.PARAM_ERROR, "地址ID不能为空");
         }
 
         Address existAddress = this.getById(address.getId());
         if (existAddress == null || !existAddress.getUserId().equals(userId)) {
-            throw new RuntimeException(ResultCode.ADDRESS_NOT_FOUND.getMessage());
+            throw new BusinessException(ResultCode.ADDRESS_NOT_FOUND);
         }
 
         if (Integer.valueOf(1).equals(address.getIsDefault())) {
@@ -61,7 +62,7 @@ public class AddressServiceImpl extends ServiceImpl<AddressMapper, Address> impl
     public void deleteAddress(Long userId, Long addressId) {
         Address address = this.getById(addressId);
         if (address == null || !address.getUserId().equals(userId)) {
-            throw new RuntimeException(ResultCode.ADDRESS_NOT_FOUND.getMessage());
+            throw new BusinessException(ResultCode.ADDRESS_NOT_FOUND);
         }
         this.removeById(addressId);
     }
@@ -80,7 +81,7 @@ public class AddressServiceImpl extends ServiceImpl<AddressMapper, Address> impl
     public void setDefaultAddress(Long userId, Long addressId) {
         Address address = this.getById(addressId);
         if (address == null || !address.getUserId().equals(userId)) {
-            throw new RuntimeException(ResultCode.ADDRESS_NOT_FOUND.getMessage());
+            throw new BusinessException(ResultCode.ADDRESS_NOT_FOUND);
         }
 
         LambdaUpdateWrapper<Address> wrapper = new LambdaUpdateWrapper<>();

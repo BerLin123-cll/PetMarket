@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.pet.petmarket.common.BusinessException;
 import com.pet.petmarket.common.ResultCode;
 import com.pet.petmarket.config.OrderProperties;
 import com.pet.petmarket.dto.CreateOrderDTO;
@@ -65,12 +66,12 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders> impleme
     public OrderVO createOrder(Long userId, CreateOrderDTO createOrderDTO) {
         Address address = addressService.getById(createOrderDTO.getAddressId());
         if (address == null || !address.getUserId().equals(userId)) {
-            throw new RuntimeException(ResultCode.ADDRESS_NOT_FOUND.getMessage());
+            throw new BusinessException(ResultCode.ADDRESS_NOT_FOUND);
         }
 
         List<Cart> carts = cartService.listByIds(createOrderDTO.getCartIds());
         if (carts.isEmpty()) {
-            throw new RuntimeException("购物车项不存在");
+            throw new BusinessException(ResultCode.CART_NOT_FOUND);
         }
 
         BigDecimal totalAmount = BigDecimal.ZERO;
@@ -78,22 +79,24 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders> impleme
 
         for (Cart cart : carts) {
             if (!cart.getUserId().equals(userId)) {
-                throw new RuntimeException("无权操作该购物车项");
+                throw new BusinessException(ResultCode.FORBIDDEN, "无权操作该购物车项");
             }
 
             Product product = productService.getById(cart.getProductId());
             if (product == null) {
-                throw new RuntimeException(ResultCode.PRODUCT_NOT_FOUND.getMessage());
+                throw new BusinessException(ResultCode.PRODUCT_NOT_FOUND);
             }
 
             if (product.getStatus() == null || product.getStatus() != 1) {
-                throw new RuntimeException("商品【" + product.getName() + "】已下架，请从购物车移除后重试");
+                throw new BusinessException(ResultCode.PRODUCT_OFF_SHELF,
+                        "商品【" + product.getName() + "】已下架，请从购物车移除后重试");
             }
 
             // 关键：条件扣减（原子操作），返回 0 表示库存不足，直接抛异常触发整单回滚
             int affected = productMapper.deductStock(product.getId(), cart.getQuantity());
             if (affected == 0) {
-                throw new RuntimeException("商品【" + product.getName() + "】库存不足");
+                throw new BusinessException(ResultCode.PRODUCT_OUT_OF_STOCK,
+                        "商品【" + product.getName() + "】库存不足");
             }
 
             BigDecimal itemTotal = product.getPrice().multiply(BigDecimal.valueOf(cart.getQuantity()));
@@ -143,25 +146,25 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders> impleme
 
         Orders order = this.getOne(wrapper);
         if (order == null) {
-            throw new RuntimeException(ResultCode.ORDER_NOT_FOUND.getMessage());
+            throw new BusinessException(ResultCode.ORDER_NOT_FOUND);
         }
 
         if (order.getOrderStatus() != STATUS_UNPAID) {
             if (order.getOrderStatus() == STATUS_CANCELLED) {
-                throw new RuntimeException("订单已取消（可能已超时未支付），无法支付");
+                throw new BusinessException(ResultCode.ORDER_STATUS_ERROR, "订单已取消（可能已超时未支付），无法支付");
             }
-            throw new RuntimeException(ResultCode.ORDER_STATUS_ERROR.getMessage());
+            throw new BusinessException(ResultCode.ORDER_STATUS_ERROR);
         }
 
         // 支付超时判断：即使定时任务尚未执行，也不允许支付已过期订单
         if (order.getPayExpireTime() != null && order.getPayExpireTime().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("订单已超过支付时限，请重新下单");
+            throw new BusinessException(ResultCode.ORDER_STATUS_ERROR, "订单已超过支付时限，请重新下单");
         }
 
         // 条件更新：只有「仍为待支付且未支付」时才更新成功，防止重复支付
         int affected = baseMapper.markPaidIfUnpaid(order.getId(), STATUS_UNPAID, STATUS_PAID, LocalDateTime.now());
         if (affected == 0) {
-            throw new RuntimeException("订单状态已变更，支付失败，请刷新后重试");
+            throw new BusinessException(ResultCode.ORDER_STATUS_ERROR, "订单状态已变更，支付失败，请刷新后重试");
         }
     }
 
@@ -195,7 +198,7 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders> impleme
     public OrderVO getOrderDetail(Long userId, Long orderId) {
         Orders order = this.getById(orderId);
         if (order == null || !order.getUserId().equals(userId)) {
-            throw new RuntimeException(ResultCode.ORDER_NOT_FOUND.getMessage());
+            throw new BusinessException(ResultCode.ORDER_NOT_FOUND);
         }
 
         List<OrderItem> items = orderItemService.getByOrderId(orderId);
@@ -207,15 +210,15 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders> impleme
     public void cancelOrder(Long userId, Long orderId) {
         Orders order = this.getById(orderId);
         if (order == null || !order.getUserId().equals(userId)) {
-            throw new RuntimeException(ResultCode.ORDER_NOT_FOUND.getMessage());
+            throw new BusinessException(ResultCode.ORDER_NOT_FOUND);
         }
 
         if (order.getOrderStatus() != STATUS_UNPAID) {
-            throw new RuntimeException("只能取消待支付的订单");
+            throw new BusinessException(ResultCode.ORDER_STATUS_ERROR, "只能取消待支付的订单");
         }
 
         if (!releaseStock(order)) {
-            throw new RuntimeException("订单状态已变更，取消失败，请刷新后重试");
+            throw new BusinessException(ResultCode.ORDER_STATUS_ERROR, "订单状态已变更，取消失败，请刷新后重试");
         }
     }
 
@@ -316,17 +319,23 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders> impleme
     public void shipOrder(Long orderId) {
         Orders order = this.getById(orderId);
         if (order == null) {
-            throw new RuntimeException(ResultCode.ORDER_NOT_FOUND.getMessage());
+            throw new BusinessException(ResultCode.ORDER_NOT_FOUND);
         }
 
         if (order.getOrderStatus() != STATUS_PAID) {
-            throw new RuntimeException("只能对已支付的订单进行发货");
+            throw new BusinessException(ResultCode.ORDER_STATUS_ERROR, "只能对已支付的订单进行发货");
         }
 
         int affected = baseMapper.updateStatusIfMatch(orderId, STATUS_PAID, STATUS_SHIPPED);
         if (affected == 0) {
-            throw new RuntimeException("订单状态已变更，发货失败，请刷新后重试");
+            throw new BusinessException(ResultCode.ORDER_STATUS_ERROR, "订单状态已变更，发货失败，请刷新后重试");
         }
+    }
+
+    @Override
+    public BigDecimal getTotalSales() {
+        BigDecimal total = baseMapper.sumPaidAmount();
+        return total == null ? BigDecimal.ZERO : total;
     }
 
     /**

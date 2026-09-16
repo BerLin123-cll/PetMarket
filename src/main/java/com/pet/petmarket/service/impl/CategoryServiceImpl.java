@@ -2,6 +2,7 @@ package com.pet.petmarket.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.pet.petmarket.common.BusinessException;
 import com.pet.petmarket.common.ResultCode;
 import com.pet.petmarket.entity.Category;
 import com.pet.petmarket.mapper.CategoryMapper;
@@ -40,7 +41,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category> i
     @Override
     public void updateCategory(Category category) {
         if (category.getId() == null) {
-            throw new RuntimeException("分类ID不能为空");
+            throw new BusinessException(ResultCode.PARAM_ERROR, "分类ID不能为空");
         }
         this.updateById(category);
     }
@@ -48,7 +49,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category> i
     @Override
     public void deleteCategory(Long categoryId) {
         if (categoryId == null) {
-            throw new RuntimeException(ResultCode.ERROR.getMessage());
+            throw new BusinessException(ResultCode.PARAM_ERROR, "分类ID不能为空");
         }
         this.removeById(categoryId);
     }

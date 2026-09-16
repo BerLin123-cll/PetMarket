@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.pet.petmarket.common.BusinessException;
 import com.pet.petmarket.common.ResultCode;
 import com.pet.petmarket.dto.ProductQueryDTO;
 import com.pet.petmarket.entity.Category;
@@ -15,6 +16,12 @@ import com.pet.petmarket.service.ProductService;
 import com.pet.petmarket.vo.ProductVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * 商品服务实现类
@@ -53,7 +60,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         IPage<Product> productPage = this.page(page, wrapper);
 
         IPage<ProductVO> voPage = new Page<>(productPage.getCurrent(), productPage.getSize(), productPage.getTotal());
-        voPage.setRecords(productPage.getRecords().stream().map(this::convertToVO).toList());
+        voPage.setRecords(convertToVOList(productPage.getRecords()));
 
         return voPage;
     }
@@ -62,7 +69,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     public ProductVO getProductDetail(Long productId) {
         Product product = this.getById(productId);
         if (product == null) {
-            throw new RuntimeException(ResultCode.PRODUCT_NOT_FOUND.getMessage());
+            throw new BusinessException(ResultCode.PRODUCT_NOT_FOUND);
         }
         return convertToVO(product);
     }
@@ -78,7 +85,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         IPage<Product> productPage = this.page(page, wrapper);
 
         IPage<ProductVO> voPage = new Page<>(productPage.getCurrent(), productPage.getSize(), productPage.getTotal());
-        voPage.setRecords(productPage.getRecords().stream().map(this::convertToVO).toList());
+        voPage.setRecords(convertToVOList(productPage.getRecords()));
 
         return voPage;
     }
@@ -94,7 +101,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     @Override
     public void updateProduct(Product product) {
         if (product.getId() == null) {
-            throw new RuntimeException("商品ID不能为空");
+            throw new BusinessException(ResultCode.PARAM_ERROR, "商品ID不能为空");
         }
         this.updateById(product);
     }
@@ -102,7 +109,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     @Override
     public void deleteProduct(Long productId) {
         if (productId == null) {
-            throw new RuntimeException(ResultCode.ERROR.getMessage());
+            throw new BusinessException(ResultCode.PARAM_ERROR, "商品ID不能为空");
         }
         this.removeById(productId);
     }
@@ -111,14 +118,14 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     public void toggleProductStatus(Long productId, Integer status) {
         Product product = this.getById(productId);
         if (product == null) {
-            throw new RuntimeException(ResultCode.PRODUCT_NOT_FOUND.getMessage());
+            throw new BusinessException(ResultCode.PRODUCT_NOT_FOUND);
         }
         product.setStatus(status);
         this.updateById(product);
     }
 
     /**
-     * 转换为 VO 对象
+     * 单个商品转换为 VO（仅用于详情页，附带一次分类查询）
      */
     private ProductVO convertToVO(Product product) {
         ProductVO vo = BeanUtil.copyProperties(product, ProductVO.class);
@@ -129,5 +136,30 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         }
 
         return vo;
+    }
+
+    /**
+     * 批量转换为 VO：一次性查出所有商品涉及的分类，避免逐条查分类造成 N+1 查询
+     */
+    private List<ProductVO> convertToVOList(List<Product> products) {
+        if (products == null || products.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Long> categoryIds = products.stream()
+                .map(Product::getCategoryId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+        Map<Long, String> categoryNameMap = categoryIds.isEmpty()
+                ? Collections.emptyMap()
+                : categoryService.listByIds(categoryIds).stream()
+                        .collect(Collectors.toMap(Category::getId, Category::getName));
+
+        return products.stream().map(product -> {
+            ProductVO vo = BeanUtil.copyProperties(product, ProductVO.class);
+            vo.setCategoryName(categoryNameMap.get(product.getCategoryId()));
+            return vo;
+        }).toList();
     }
 }

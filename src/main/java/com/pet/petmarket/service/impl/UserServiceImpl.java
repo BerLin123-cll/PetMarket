@@ -3,6 +3,7 @@ package com.pet.petmarket.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.pet.petmarket.common.BusinessException;
 import com.pet.petmarket.common.ResultCode;
 import com.pet.petmarket.dto.LoginDTO;
 import com.pet.petmarket.dto.RegisterDTO;
@@ -33,7 +34,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(User::getUsername, registerDTO.getUsername());
         if (this.count(wrapper) > 0) {
-            throw new RuntimeException(ResultCode.USERNAME_EXIST.getMessage());
+            throw new BusinessException(ResultCode.USERNAME_EXIST);
         }
 
         // 创建用户对象
@@ -59,17 +60,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         User user = this.getOne(wrapper);
 
         if (user == null) {
-            throw new RuntimeException(ResultCode.USER_NOT_FOUND.getMessage());
+            throw new BusinessException(ResultCode.USER_NOT_FOUND);
         }
 
         // 检查账号状态
         if (user.getStatus() == 0) {
-            throw new RuntimeException(ResultCode.USER_DISABLED.getMessage());
+            throw new BusinessException(ResultCode.USER_DISABLED);
         }
 
         // 验证密码
         if (!passwordUtils.matches(loginDTO.getPassword(), user.getPassword())) {
-            throw new RuntimeException(ResultCode.PASSWORD_ERROR.getMessage());
+            throw new BusinessException(ResultCode.PASSWORD_ERROR);
         }
 
         // 生成 JWT Token

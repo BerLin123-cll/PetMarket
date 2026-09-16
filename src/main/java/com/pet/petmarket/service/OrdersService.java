@@ -6,6 +6,8 @@ import com.pet.petmarket.dto.CreateOrderDTO;
 import com.pet.petmarket.entity.Orders;
 import com.pet.petmarket.vo.OrderVO;
 
+import java.math.BigDecimal;
+
 /**
  * 订单服务接口
  */
@@ -61,4 +63,11 @@ public interface OrdersService extends IService<Orders> {
      * 管理员发货
      */
     void shipOrder(Long orderId);
+
+    /**
+     * 统计已支付订单的销售总额（由数据库直接 SUM 聚合，避免全表加载到内存）
+     *
+     * @return 销售总额，无已支付订单时返回 0
+     */
+    BigDecimal getTotalSales();
 }

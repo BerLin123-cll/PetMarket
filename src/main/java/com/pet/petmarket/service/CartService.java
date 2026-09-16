@@ -18,13 +18,20 @@ public interface CartService extends IService<Cart> {
 
     /**
      * 更新购物车商品数量
+     *
+     * @param userId   当前登录用户ID（用于校验购物车归属，防止越权操作他人数据）
+     * @param cartId   购物车项ID
+     * @param quantity 目标数量
      */
-    void updateCartQuantity(Long cartId, Integer quantity);
+    void updateCartQuantity(Long userId, Long cartId, Integer quantity);
 
     /**
      * 删除购物车项
+     *
+     * @param userId 当前登录用户ID（用于校验购物车归属，防止越权删除他人数据）
+     * @param cartId 购物车项ID
      */
-    void removeFromCart(Long cartId);
+    void removeFromCart(Long userId, Long cartId);
 
     /**
      * 获取用户购物车列表

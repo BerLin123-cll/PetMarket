@@ -59,6 +59,11 @@ petmarket:
     pay-timeout-minutes: ${ORDER_PAY_TIMEOUT_MINUTES:30}
     # 超时扫描任务执行间隔（毫秒），默认 60 秒
     release-scan-interval-ms: ${ORDER_RELEASE_SCAN_INTERVAL_MS:60000}
+  # ---------- 跨域来源白名单 ----------
+  #   因为开启了 allowCredentials，允许来源不能用 *，这里显式列出前端域名（逗号分隔）。
+  #   生产环境请通过环境变量 CORS_ALLOWED_ORIGINS 覆盖为真实前端域名，例如 https://shop.example.com
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
   upload:
     # 本地上传根目录（图片只保存在本机，暂不做服务器/OSS 上传）
     dir: ${UPLOAD_DIR:./data/upload}

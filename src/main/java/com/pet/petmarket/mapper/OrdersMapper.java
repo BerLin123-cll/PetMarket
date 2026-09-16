@@ -7,6 +7,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -59,4 +60,15 @@ public interface OrdersMapper extends BaseMapper<Orders> {
             "AND create_time <= #{deadline} ORDER BY create_time ASC LIMIT #{limit}")
     List<Long> selectTimeoutOrderIds(@Param("deadline") LocalDateTime deadline,
                                      @Param("limit") int limit);
+
+    /**
+     * 统计已支付订单的销售总额
+     *
+     * <p>直接在数据库用 {@code SUM} 聚合，避免把全部已支付订单加载到内存再累加。
+     * {@code COALESCE} 保证无记录时返回 0 而不是 NULL。</p>
+     *
+     * @return 销售总额
+     */
+    @Select("SELECT COALESCE(SUM(total_amount), 0) FROM orders WHERE pay_status = 1")
+    BigDecimal sumPaidAmount();
 }

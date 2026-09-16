@@ -23,6 +23,7 @@ public enum ResultCode {
 
     PRODUCT_NOT_FOUND(2001, "商品不存在"),
     PRODUCT_OUT_OF_STOCK(2002, "商品库存不足"),
+    PRODUCT_OFF_SHELF(2003, "商品已下架"),
 
     CART_NOT_FOUND(3001, "购物车记录不存在"),
 

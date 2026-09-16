@@ -2,6 +2,7 @@ package com.pet.petmarket.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.pet.petmarket.common.BusinessException;
 import com.pet.petmarket.common.ResultCode;
 import com.pet.petmarket.dto.LoginDTO;
 import com.pet.petmarket.entity.Admin;
@@ -33,11 +34,11 @@ public class AdminServiceImpl extends ServiceImpl<AdminMapper, Admin> implements
         Admin admin = this.getOne(wrapper);
 
         if (admin == null) {
-            throw new RuntimeException("管理员账号不存在");
+            throw new BusinessException(ResultCode.USER_NOT_FOUND, "管理员账号不存在");
         }
 
         if (!passwordUtils.matches(loginDTO.getPassword(), admin.getPassword())) {
-            throw new RuntimeException(ResultCode.PASSWORD_ERROR.getMessage());
+            throw new BusinessException(ResultCode.PASSWORD_ERROR);
         }
 
         String token = jwtUtils.generateToken(admin.getId(), admin.getUsername(), true);
