@@ -5,8 +5,11 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.pet.petmarket.cache.CacheKeys;
+import com.pet.petmarket.cache.RedisCache;
 import com.pet.petmarket.common.BusinessException;
 import com.pet.petmarket.common.ResultCode;
+import com.pet.petmarket.config.CacheProperties;
 import com.pet.petmarket.dto.ProductQueryDTO;
 import com.pet.petmarket.entity.Category;
 import com.pet.petmarket.entity.Product;
@@ -25,12 +28,21 @@ import java.util.stream.Collectors;
 
 /**
  * 商品服务实现类
+ *
+ * <p>商品详情走 Redis 缓存（Cache-Aside，键 {@code petmarket:v1:product:detail:{id}}）：
+ * 详情页是最高频的读接口，而商品信息变更频率低，缓存收益明显。</p>
+ *
+ * <p><b>缓存失效</b>：新增 / 修改 / 删除 / 上下架都会清掉对应详情键；
+ * 由于商品集合变化会影响「宠物个性化推荐」，同时按前缀清掉推荐缓存。
+ * 分页列表（查询条件组合多）不做缓存，避免键数量爆炸。</p>
  */
 @Service
 @RequiredArgsConstructor
 public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> implements ProductService {
 
     private final CategoryService categoryService;
+    private final RedisCache redisCache;
+    private final CacheProperties cacheProperties;
 
     @Override
     public IPage<ProductVO> getProductPage(ProductQueryDTO queryDTO) {
@@ -67,11 +79,21 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
 
     @Override
     public ProductVO getProductDetail(Long productId) {
+        // 1. 先读缓存；Redis 关闭 / 故障时这里返回 null，自动回落到数据库
+        String cacheKey = CacheKeys.productDetail(productId);
+        ProductVO cached = redisCache.get(cacheKey, ProductVO.class);
+        if (cached != null) {
+            return cached;
+        }
+
+        // 2. 缓存未命中：查库 + 组装 VO + 回填缓存
         Product product = this.getById(productId);
         if (product == null) {
             throw new BusinessException(ResultCode.PRODUCT_NOT_FOUND);
         }
-        return convertToVO(product);
+        ProductVO vo = convertToVO(product);
+        redisCache.put(cacheKey, vo, cacheProperties.getProductDetailTtl());
+        return vo;
     }
 
     @Override
@@ -96,6 +118,8 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             product.setStatus(1);
         }
         this.save(product);
+        // 新商品可能进入宠物推荐候选池
+        evictRecommendCache();
     }
 
     @Override
@@ -104,6 +128,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             throw new BusinessException(ResultCode.PARAM_ERROR, "商品ID不能为空");
         }
         this.updateById(product);
+        evictProductCache(product.getId());
     }
 
     @Override
@@ -112,6 +137,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             throw new BusinessException(ResultCode.PARAM_ERROR, "商品ID不能为空");
         }
         this.removeById(productId);
+        evictProductCache(productId);
     }
 
     @Override
@@ -122,6 +148,22 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         }
         product.setStatus(status);
         this.updateById(product);
+        evictProductCache(productId);
+    }
+
+    /**
+     * 商品变更后的缓存失效：详情键精确删除 + 推荐缓存按前缀删除
+     */
+    private void evictProductCache(Long productId) {
+        redisCache.evict(CacheKeys.productDetail(productId));
+        evictRecommendCache();
+    }
+
+    /**
+     * 商品集合变化会影响「物种 → 分类 → 商品」的推荐结果，推荐缓存只能按前缀整体失效
+     */
+    private void evictRecommendCache() {
+        redisCache.evictByPrefix(CacheKeys.PET_RECOMMEND_PREFIX);
     }
 
     /**

@@ -4,6 +4,7 @@
 # 发布/生产环境请勿直接修改本文件中的敏感信息，
 # 推荐通过「环境变量」或启动参数覆盖（见 application-prod.yml 与 .env.example）：
 #   DB_URL / DB_USERNAME / DB_PASSWORD / JWT_SECRET / UPLOAD_DIR ...
+#   Redis：REDIS_HOST / REDIS_PORT / REDIS_PASSWORD / REDIS_DATABASE / CACHE_ENABLED ...
 #
 # 启动示例（Windows PowerShell）：
 #   $env:JWT_SECRET="你的生产密钥"; .\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=prod"
@@ -21,6 +22,25 @@ spring:
     url: ${DB_URL:jdbc:mysql://localhost:3306/pet_market?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true}
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:123456}
+
+  # ---------- Redis 缓存（本地用 docker compose 启动，见 docker-compose.yml）----------
+  #   默认值对应 docker-compose.yml 中的 redis 服务（localhost:6379 / 密码 petmarket）。
+  #   timeout 与 connect-timeout 刻意设短：Redis 故障时快速失败并自动降级查库，
+  #   而不是让每个请求都卡住几十秒（30 秒熔断窗口见 RedisCache）。
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:petmarket}
+      database: ${REDIS_DATABASE:0}
+      timeout: ${REDIS_TIMEOUT:2s}
+      connect-timeout: ${REDIS_CONNECT_TIMEOUT:2s}
+      lettuce:
+        pool:
+          max-active: ${REDIS_POOL_MAX_ACTIVE:16}
+          max-idle: ${REDIS_POOL_MAX_IDLE:8}
+          min-idle: ${REDIS_POOL_MIN_IDLE:0}
+          max-wait: ${REDIS_POOL_MAX_WAIT:1s}
 
   # ---------- 文件上传大小限制（与 petmarket.upload.max-size 保持一致）----------
   servlet:
@@ -71,6 +91,14 @@ petmarket:
     max-size: ${UPLOAD_MAX_SIZE:5242880}
     product-sub-dir: product
     check-magic-number: true
+  # ---------- Redis 缓存策略 ----------
+  #   enabled=false 时完全不访问 Redis，接口等价于直连数据库；
+  #   TTL 使用 Spring 的 Duration 写法：30s / 10m / 1h
+  cache:
+    enabled: ${CACHE_ENABLED:true}
+    product-detail-ttl: ${CACHE_TTL_PRODUCT_DETAIL:10m}
+    category-list-ttl: ${CACHE_TTL_CATEGORY_LIST:1h}
+    pet-recommend-ttl: ${CACHE_TTL_PET_RECOMMEND:10m}
 
 # ============================================================
 # 日志配置

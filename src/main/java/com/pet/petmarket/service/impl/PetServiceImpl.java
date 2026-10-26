@@ -2,8 +2,12 @@ package com.pet.petmarket.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.pet.petmarket.cache.CacheKeys;
+import com.pet.petmarket.cache.RedisCache;
 import com.pet.petmarket.common.BusinessException;
 import com.pet.petmarket.common.ResultCode;
+import com.pet.petmarket.config.CacheProperties;
 import com.pet.petmarket.entity.Category;
 import com.pet.petmarket.entity.Pet;
 import com.pet.petmarket.entity.Product;
@@ -35,7 +39,7 @@ import java.util.List;
  *   <li><b>驱虫提醒</b>：进页面时按「出生日/上次驱虫日 + 驱虫周期」实时推算下次驱虫时间
  *       （幼年 &lt;6 个月每月一次，否则每 3 个月一次），不落库、无定时任务；</li>
  *   <li><b>个性化推荐（方案A）</b>：物种→商品分类映射限定范围 → 排除过敏关键词命中商品
- *       → 按适龄段关键词做优先级排序。</li>
+ *       → 按适龄段关键词做优先级排序；结果按宠物维度缓存（键 {@code petmarket:v1:pet:recommend:{petId}}）。</li>
  * </ol>
  */
 @Service
@@ -44,6 +48,12 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
 
     private final CategoryService categoryService;
     private final ProductService productService;
+    private final RedisCache redisCache;
+    private final CacheProperties cacheProperties;
+
+    /** 推荐结果缓存的泛型类型 */
+    private static final TypeReference<List<ProductVO>> PRODUCT_LIST_TYPE = new TypeReference<>() {
+    };
 
     /** 推荐结果最多返回的商品数 */
     private static final int RECOMMEND_LIMIT = 8;
@@ -96,18 +106,40 @@ public class PetServiceImpl extends ServiceImpl<PetMapper, Pet> implements PetSe
         getOwnedPet(userId, pet.getId());
         pet.setUserId(userId);
         this.updateById(pet);
+        // 物种 / 生日 / 过敏史变化都会影响推荐结果，按宠物维度精确失效
+        redisCache.evict(CacheKeys.petRecommend(pet.getId()));
     }
 
     @Override
     public void deletePet(Long userId, Long petId) {
         getOwnedPet(userId, petId);
         this.removeById(petId);
+        redisCache.evict(CacheKeys.petRecommend(petId));
     }
 
     @Override
     public List<ProductVO> recommendProducts(Long userId, Long petId) {
+        // 归属校验必须放在读缓存之前：否则用别人的 petId 就能命中别人宠物的推荐结果
         Pet pet = getOwnedPet(userId, petId);
 
+        String cacheKey = CacheKeys.petRecommend(pet.getId());
+        List<ProductVO> cached = redisCache.get(cacheKey, PRODUCT_LIST_TYPE);
+        if (cached != null) {
+            return cached;
+        }
+
+        List<ProductVO> recommendations = computeRecommendations(pet);
+        redisCache.put(cacheKey, recommendations, cacheProperties.getPetRecommendTtl());
+        return recommendations;
+    }
+
+    /**
+     * 推荐主流程（不含缓存逻辑）
+     *
+     * <p>推荐结果只依赖「宠物档案 + 商品 + 分类」，因此宠物档案变更时按宠物维度精确失效，
+     * 商品/分类变更时由对应服务按前缀失效，方法内部无需感知缓存。</p>
+     */
+    private List<ProductVO> computeRecommendations(Pet pet) {
         PetSpecies species = PetSpecies.of(pet.getSpecies());
         if (species == null) {
             return Collections.emptyList();

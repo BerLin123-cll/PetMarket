@@ -22,6 +22,16 @@ spring:
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8
+  # Redis 连接参数：单元/集成测试默认不访问 Redis（petmarket.cache.enabled=false），
+  # 只有显式打开缓存的 Redis 集成测试才会用到下面这组连接参数。
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:petmarket}
+      database: ${REDIS_DATABASE:0}
+      timeout: 500ms
+      connect-timeout: 500ms
 
 mybatis-plus:
   configuration:
@@ -39,6 +49,10 @@ petmarket:
     release-scan-interval-ms: 60000
     # 测试中关闭定时任务，改为手动调用 service 方法验证逻辑
     auto-release-enabled: false
+  cache:
+    # 默认关闭缓存：测试只验证业务逻辑，不依赖本机是否启动 Redis。
+    # 缓存行为由 RedisCacheIntegrationTest 显式打开（Redis 不可用时该测试自动跳过）。
+    enabled: false
   upload:
     dir: ./target/test-upload
     url-prefix: /uploads

@@ -12,15 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-/**
- * 后台文件上传接口
- *
- * <p>图片保存在后端所在电脑的本地磁盘（默认 {@code ./data/upload}），
- * 并通过 {@code /uploads/**} 直接对外提供访问，无需对象存储或服务器部署。</p>
- *
- * <p>安全：该接口位于 {@code /admin/**} 下，受 {@link AdminGuardInterceptor} 保护，
- * 只有管理员 Token 才能调用。</p>
- */
+
 @RestController
 @RequestMapping("/admin/upload")
 @RequiredArgsConstructor

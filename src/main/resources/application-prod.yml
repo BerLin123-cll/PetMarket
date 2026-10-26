@@ -8,6 +8,12 @@
 # 生产环境要求（启动前必须提供）：
 #   DB_URL / DB_USERNAME / DB_PASSWORD / JWT_SECRET
 # 未提供 JWT_SECRET 时应用会启动失败并给出明确提示（见 StartupConfigValidator）。
+#
+# Redis（缓存）：
+#   连接参数继承 application.yml 中的 spring.data.redis.*，生产环境请用环境变量覆盖
+#   REDIS_HOST / REDIS_PORT / REDIS_PASSWORD / REDIS_DATABASE，指向内网 Redis 并注入强密码。
+#   缓存不可用时应用会自动降级为直连数据库（不会阻断启动），排查缓存问题可临时设置
+#   CACHE_ENABLED=false。本文件末尾单独调大连接池，便于生产并发读取。
 # ============================================================
 
 server:
@@ -37,6 +43,15 @@ spring:
     multipart:
       max-file-size: ${UPLOAD_MAX_FILE_SIZE:5MB}
       max-request-size: ${UPLOAD_MAX_REQUEST_SIZE:10MB}
+  # 生产环境连接池适当放大（覆盖 application.yml 中的开发默认值）
+  data:
+    redis:
+      lettuce:
+        pool:
+          max-active: ${REDIS_POOL_MAX_ACTIVE:32}
+          max-idle: ${REDIS_POOL_MAX_IDLE:16}
+          min-idle: ${REDIS_POOL_MIN_IDLE:2}
+          max-wait: ${REDIS_POOL_MAX_WAIT:1s}
 
 # ---------- 彻底关闭 SQL 明细日志 ----------
 mybatis-plus:
