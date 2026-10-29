@@ -26,7 +26,7 @@
         <el-table-column label="商品" min-width="250">
           <template #default="{ row }">
             <div style="display:flex;align-items:center;gap:8px">
-              <img :src="row.productImage || 'https://via.placeholder.com/40'" style="width:40px;height:40px;border-radius:4px" />
+              <img :src="row.productImage || '/placeholder-square.svg'" style="width:40px;height:40px;border-radius:6px;object-fit:cover;background:var(--pm-surface-soft)" />
               {{ row.productName }}
             </div>
           </template>
@@ -45,7 +45,7 @@
           <span class="order-total">合计：¥{{ order.totalAmount }}</span>
           <el-button
             v-if="order.orderStatus === 0"
-            type="danger"
+            type="primary"
             size="small"
             :disabled="payRemaining(order) <= 0"
             @click="handlePay(order)"
@@ -114,19 +114,19 @@ onMounted(fetchData)
 </script>
 
 <style scoped>
-.order-card { border: 1px solid #eee; border-radius: 8px; margin-bottom: 16px; overflow: hidden; }
+.order-card { border: 1px solid var(--pm-border-warm); border-radius: var(--pm-radius-card); margin-bottom: 16px; overflow: hidden; }
 .order-header { display: flex; align-items: center; gap: 16px; padding: 12px 16px; }
 .order-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--pm-border-warm);
 }
 .order-total {
   font-size: 16px;
   font-weight: bold;
-  color: #f56c6c;
+  color: var(--pm-primary);
   margin-right: 12px;
 }
 .pay-countdown {

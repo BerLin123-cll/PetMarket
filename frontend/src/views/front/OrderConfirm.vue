@@ -22,7 +22,7 @@
         <el-table-column label="商品" min-width="280">
           <template #default="{ row }">
             <div style="display:flex;align-items:center;gap:10px">
-              <img :src="row.productImage || 'https://via.placeholder.com/50'" style="width:50px;height:50px;border-radius:4px" />
+              <img :src="row.productImage || '/placeholder-square.svg'" style="width:50px;height:50px;border-radius:8px;object-fit:cover;background:var(--pm-surface-soft)" />
               <span>{{ row.productName }}</span>
             </div>
           </template>
@@ -41,7 +41,7 @@
     </el-card>
 
     <div class="submit-row">
-      <el-button type="danger" size="large" :loading="submitting" @click="handleSubmit" :disabled="!selectedAddressId">
+      <el-button type="primary" size="large" :loading="submitting" @click="handleSubmit" :disabled="!selectedAddressId">
         提交订单
       </el-button>
     </div>
@@ -118,13 +118,13 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.page-title { font-size: 22px; margin-bottom: 20px; }
+.page-title { font-size: 24px; margin-bottom: 20px; }
 .section-card { margin-bottom: 20px; }
 .section-card h3 { margin-bottom: 16px; }
 .address-group { display: flex; flex-direction: column; gap: 12px; }
-.address-item { padding: 12px; border: 1px solid #eee; border-radius: 8px; }
-.addr-detail { color: #666; font-size: 13px; }
+.address-item { padding: 12px; border: 1px solid var(--pm-border); border-radius: 8px; }
+.addr-detail { color: var(--pm-text-secondary); font-size: 13px; }
 .total-row { text-align: right; margin-top: 16px; font-size: 16px; }
-.total-price { color: #f56c6c; font-size: 22px; font-weight: bold; }
+.total-price { color: var(--pm-primary); font-size: 22px; font-weight: bold; }
 .submit-row { text-align: right; margin-top: 20px; }
 </style>

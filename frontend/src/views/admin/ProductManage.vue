@@ -18,7 +18,7 @@
         <el-table-column prop="id" label="ID" width="70" />
         <el-table-column label="图片" width="100">
           <template #default="{ row }">
-            <img :src="row.mainImage || 'https://via.placeholder.com/60'" style="width:60px;height:60px;border-radius:4px;object-fit:cover" />
+            <img :src="row.mainImage || '/placeholder-square.svg'" style="width:60px;height:60px;border-radius:8px;object-fit:cover;background:var(--pm-surface-soft)" />
           </template>
         </el-table-column>
         <el-table-column prop="name" label="商品名称" min-width="160" show-overflow-tooltip />

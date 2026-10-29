@@ -24,7 +24,7 @@
       </el-alert>
 
       <div v-if="paid" class="paid-tip">
-        <el-alert title="🎉 支付成功！感谢您的购买" type="success" show-icon :closable="false" />
+        <el-alert title="支付成功！感谢您的购买" type="success" show-icon :closable="false" />
         <div style="margin-top:16px;text-align:center">
           <el-button type="primary" @click="$router.push('/')">继续购物</el-button>
           <el-button @click="$router.push('/user/orders')">查看订单</el-button>

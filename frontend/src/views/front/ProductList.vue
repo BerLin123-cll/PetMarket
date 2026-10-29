@@ -1,8 +1,25 @@
 <template>
   <div class="product-list-page">
+    <div class="list-head">
+      <div>
+        <h1 class="page-title">全部商品</h1>
+        <p class="page-desc">按分类、关键词或价格，挑选适合毛孩子的日常用品</p>
+      </div>
+      <span class="result-count">共 {{ total }} 件商品</span>
+    </div>
+
     <div class="filter-bar">
-      <el-input v-model="query.keyword" placeholder="搜索商品..." clearable style="width:300px" @clear="fetchData" @keyup.enter="fetchData">
-        <template #append><el-button icon="Search" @click="fetchData" /></template>
+      <el-input
+        v-model="query.keyword"
+        placeholder="搜索商品..."
+        clearable
+        class="search-input"
+        @clear="fetchData"
+        @keyup.enter="fetchData"
+      >
+        <template #append>
+          <el-button icon="Search" @click="fetchData" />
+        </template>
       </el-input>
       <div class="filter-right">
         <el-select v-model="query.categoryId" placeholder="全部分类" clearable @change="fetchData" style="width:150px">
@@ -16,20 +33,23 @@
       </div>
     </div>
 
-    <el-row :gutter="20">
-      <el-col :span="6" v-for="item in products" :key="item.id">
-        <el-card shadow="hover" class="product-card" @click="$router.push(`/product/${item.id}`)">
-          <img :src="item.mainImage || defaultImg" class="product-img" />
-          <div class="product-info">
-            <h4 class="product-name">{{ item.name }}</h4>
-            <p class="product-cat">{{ item.categoryName }}</p>
-            <p class="product-price">¥{{ item.price }}</p>
-          </div>
-        </el-card>
-      </el-col>
-    </el-row>
+    <div v-loading="loading" class="products-wrap" element-loading-background="transparent">
+      <el-row :gutter="18">
+        <el-col
+          v-for="item in products"
+          :key="item.id"
+          :xs="12"
+          :sm="12"
+          :md="12"
+          :lg="6"
+          class="product-col"
+        >
+          <ProductCard :product="item" />
+        </el-col>
+      </el-row>
 
-    <el-empty v-if="!loading && products.length === 0" description="暂无商品" />
+      <el-empty v-if="!loading && products.length === 0" description="暂无商品" />
+    </div>
 
     <div class="pagination-wrap">
       <el-pagination
@@ -50,6 +70,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { getProductList } from '@/api/product'
 import { getCategoryList } from '@/api/category'
+import ProductCard from '@/components/ProductCard.vue'
 
 const route = useRoute()
 const products = ref([])
@@ -57,7 +78,6 @@ const categories = ref([])
 const loading = ref(false)
 const total = ref(0)
 const sortValue = ref('')
-const defaultImg = 'https://via.placeholder.com/280x200?text=Pet+Product'
 
 const query = reactive({
   keyword: '',
@@ -105,13 +125,91 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.filter-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: #fff; padding: 16px; border-radius: 8px; }
-.filter-right { display: flex; gap: 12px; }
-.product-card { cursor: pointer; border-radius: 8px; margin-bottom: 16px; }
-.product-card:hover { transform: translateY(-4px); transition: all 0.3s; }
-.product-img { width: 100%; height: 180px; object-fit: cover; border-radius: 4px; }
-.product-name { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.product-cat { font-size: 12px; color: #999; margin: 4px 0; }
-.product-price { color: #f56c6c; font-size: 18px; font-weight: bold; }
-.pagination-wrap { display: flex; justify-content: center; margin-top: 24px; }
+.list-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.page-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--pm-ink);
+}
+
+.page-desc {
+  margin-top: 5px;
+  font-size: 13px;
+  color: var(--pm-text-muted);
+}
+
+.result-count {
+  font-size: 13px;
+  color: var(--pm-text-light);
+}
+
+.filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  margin-bottom: 22px;
+  background: var(--pm-surface);
+  border: 1px solid var(--pm-border-warm);
+  border-radius: var(--pm-radius-card);
+  box-shadow: var(--pm-shadow-card);
+}
+
+.search-input {
+  width: 320px;
+}
+
+.filter-right {
+  display: flex;
+  gap: 12px;
+}
+
+.products-wrap {
+  min-height: 160px;
+}
+
+.product-col {
+  margin-bottom: 18px;
+}
+
+.pagination-wrap {
+  display: flex;
+  justify-content: center;
+  margin: 10px 0 24px;
+}
+
+@media (max-width: 768px) {
+  .list-head {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .filter-bar {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .search-input {
+    width: 100%;
+  }
+
+  .filter-right {
+    gap: 10px;
+  }
+
+  .filter-right :deep(.el-select) {
+    flex: 1;
+    width: auto !important;
+  }
+}
 </style>

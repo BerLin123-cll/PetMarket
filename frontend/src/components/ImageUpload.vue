@@ -138,14 +138,14 @@ const handleError = (error) => {
   background: #fafafa;
   transition: border-color 0.2s;
 }
-.uploader-box:hover { border-color: #409eff; }
+.uploader-box:hover { border-color: var(--pm-primary); }
 .preview { width: 100%; height: 100%; object-fit: cover; display: block; }
 .placeholder { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #909399; }
 .plus-icon { font-size: 22px; }
 .tip { font-size: 12px; }
 .mask {
   position: absolute; inset: 0; background: rgba(255, 255, 255, 0.7);
-  display: flex; align-items: center; justify-content: center; font-size: 20px; color: #409eff;
+  display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--pm-primary);
 }
 .uploader-side { flex: 1; min-width: 220px; }
 .uploader-actions { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }

@@ -11,6 +11,10 @@ export default defineConfig({
     },
     server: {
         port: 5173,
+        // 编辑器原子保存时会先生成临时目录，Vite 监听这些目录会因文件锁崩溃
+        watch: {
+            ignored: ['**/.*.tmpdir/**', '**/*.tmp']
+        },
         proxy: {
             '/api': {
                 target: 'http://localhost:8081',

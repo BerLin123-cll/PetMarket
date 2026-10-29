@@ -44,7 +44,7 @@
       <div class="footer-right">
         <span>已选 {{ selectedItems.length }} 件，合计：</span>
         <span class="total-price">¥{{ totalAmount }}</span>
-        <el-button type="danger" size="large" :disabled="selectedItems.length === 0" @click="goSettle">去结算</el-button>
+        <el-button type="primary" size="large" :disabled="selectedItems.length === 0" @click="goSettle">去结算</el-button>
       </div>
     </div>
   </div>
@@ -60,7 +60,7 @@ const router = useRouter()
 const cartList = ref([])
 const selectedItems = ref([])
 const loading = ref(false)
-const defaultImg = 'https://via.placeholder.com/80x80?text=Product'
+const defaultImg = '/placeholder-square.svg'
 
 const totalAmount = computed(() => {
   return selectedItems.value.reduce((sum, item) => sum + Number(item.subtotal), 0).toFixed(2)
@@ -108,15 +108,16 @@ onMounted(fetchData)
 </script>
 
 <style scoped>
-.page-title { font-size: 22px; margin-bottom: 20px; }
+.page-title { font-size: 24px; margin-bottom: 20px; }
 .product-cell { display: flex; align-items: center; gap: 12px; }
-.cart-img { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; }
-.price { color: #666; }
-.subtotal { color: #f56c6c; font-weight: bold; }
+.cart-img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; background: var(--pm-surface-soft); }
+.price { color: var(--pm-text-secondary); }
+.subtotal { color: var(--pm-primary); font-weight: bold; }
 .cart-footer {
   display: flex; justify-content: space-between; align-items: center;
-  background: #fff; padding: 16px 20px; border-radius: 8px; margin-top: 16px;
+  background: #fff; padding: 16px 20px; border-radius: var(--pm-radius-card); margin-top: 16px;
+  border: 1px solid var(--pm-border-warm);
 }
 .footer-right { display: flex; align-items: center; gap: 12px; }
-.total-price { font-size: 24px; color: #f56c6c; font-weight: bold; }
+.total-price { font-size: 24px; color: var(--pm-primary); font-weight: bold; }
 </style>

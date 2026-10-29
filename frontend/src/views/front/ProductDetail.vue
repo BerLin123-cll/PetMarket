@@ -19,10 +19,10 @@
             <el-input-number v-model="quantity" :min="1" :max="product.stock" />
           </div>
           <div class="action-btns">
-            <el-button type="warning" size="large" @click="handleAddCart" :loading="cartLoading">
+            <el-button type="primary" plain size="large" @click="handleAddCart" :loading="cartLoading">
               <el-icon><ShoppingCart /></el-icon> 加入购物车
             </el-button>
-            <el-button type="danger" size="large" @click="handleBuyNow">立即购买</el-button>
+            <el-button type="primary" size="large" @click="handleBuyNow">立即购买</el-button>
           </div>
         </el-col>
       </el-row>
@@ -44,7 +44,7 @@ const userStore = useUserStore()
 const product = ref(null)
 const quantity = ref(1)
 const cartLoading = ref(false)
-const defaultImg = 'https://via.placeholder.com/400x400?text=Pet+Product'
+const defaultImg = '/placeholder-product.svg'
 
 const handleAddCart = async () => {
   if (!userStore.token) { router.push('/login'); return }
@@ -79,11 +79,11 @@ onMounted(async () => {
 
 <style scoped>
 .detail-page { max-width: 1000px; margin: 0 auto; }
-.detail-img { width: 100%; border-radius: 8px; }
+.detail-img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--pm-radius-card); background: var(--pm-surface-soft); }
 .detail-name { font-size: 24px; margin-bottom: 12px; }
-.detail-price { font-size: 28px; color: #f56c6c; font-weight: bold; margin: 16px 0; }
-.detail-stock { color: #999; margin-bottom: 16px; }
-.detail-desc { background: #f9f9f9; padding: 16px; border-radius: 8px; margin-bottom: 20px; }
+.detail-price { font-size: 28px; color: var(--pm-primary); font-weight: bold; margin: 16px 0; }
+.detail-stock { color: var(--pm-text-light); margin-bottom: 16px; }
+.detail-desc { background: var(--pm-surface-soft); padding: 16px; border-radius: var(--pm-radius-card); margin-bottom: 20px; }
 .detail-desc h4 { margin-bottom: 8px; }
 .detail-desc p { color: #666; line-height: 1.6; }
 .quantity-row { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }

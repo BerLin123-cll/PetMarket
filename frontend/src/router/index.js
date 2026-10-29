@@ -20,7 +20,7 @@ const routes = [
         component: () => import('@/views/front/UserCenter.vue'),
         meta: { requireAuth: true },
         children: [
-          { path: '', redirect: '/user/profile' },
+          { path: '', name: 'UserCenterIndex', redirect: '/user/profile' },
           { path: 'profile', name: 'UserProfile', component: () => import('@/views/front/user/Profile.vue') },
           { path: 'address', name: 'UserAddress', component: () => import('@/views/front/user/Address.vue') },
           { path: 'pets', name: 'UserPets', component: () => import('@/views/front/user/Pets.vue') },

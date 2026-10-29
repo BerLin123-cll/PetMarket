@@ -56,8 +56,8 @@ const handleRegister = async () => {
 </script>
 
 <style scoped>
-.register-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea, #764ba2); }
-.register-card { width: 420px; padding: 20px; border-radius: 12px; }
-.title { text-align: center; margin-bottom: 30px; color: #333; }
-.footer-link { text-align: center; color: #999; }
+.register-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; background: var(--pm-bg); }
+.register-card { width: 420px; padding: 24px; border-radius: 16px; border: 1px solid var(--pm-border-warm); box-shadow: var(--pm-shadow-card); }
+.title { text-align: center; margin-bottom: 28px; color: var(--pm-ink); font-size: 22px; font-weight: 700; }
+.footer-link { text-align: center; color: var(--pm-text-light); }
 </style>

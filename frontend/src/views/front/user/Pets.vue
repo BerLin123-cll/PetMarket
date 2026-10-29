@@ -136,7 +136,7 @@ const SPECIES_OPTIONS = [
   { value: 6, label: '鱼' }
 ]
 
-const defaultImg = 'https://via.placeholder.com/280x200?text=Pet+Product'
+const defaultImg = '/placeholder-square.svg'
 
 const pets = ref([])
 const loading = ref(false)
